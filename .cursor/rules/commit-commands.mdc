@@ -12,11 +12,24 @@ alwaysApply: true
 - `commit 中文`：生成中文 commit 信息
 - `commit 英文`：生成英文 commit 信息
 
+**重要**：收到这些指令后，使用轻量级命令获取变更信息，避免执行可能卡住的 `git diff` 命令。
+
 ## 执行步骤
 
-1.  **分析变更**：
-    - 获取当前暂存区（staged）的代码变更 (`git diff --cached`)。
-    - 如果没有暂存变更，请提示用户先执行 `git add` 或 `git stage` 来暂存文件。
+1.  **分析变更**（优先使用轻量级命令，避免卡住）：
+    - **方法一（推荐）**：执行 `git status --short` 获取暂存文件列表和状态。
+      - 如果没有暂存文件，直接提示用户："没有检测到暂存的变更，请先使用 `git add` 或 `git stage` 暂存文件。"
+      - 如果有暂存文件，基于文件名、路径和状态（A=新增，M=修改，D=删除）来推断变更类型，生成 commit 信息。
+      - 这种方法快速且不会卡住。
+    
+    - **方法二（备选）**：如果方法一的信息不足，可以尝试：
+      - 执行 `git diff --cached --name-status` 获取文件状态（比完整 diff 快）
+      - 或者执行 `git diff --cached --stat` 获取变更统计
+      - **注意**：如果这些命令执行超过 3 秒无响应，立即放弃，回退到方法一。
+    
+    - **避免使用**：不要执行 `git diff --cached`（完整 diff），因为它可能卡住，特别是当有大量变更或大文件时。
+    
+    - 基于获取的信息进行分析和生成 commit 信息。
 
 2.  **生成信息**：
     - 根据用户的语言指令（中文/英文），基于变更内容生成符合 Conventional Commits 规范的 commit message。
@@ -34,13 +47,18 @@ alwaysApply: true
         - `commit 中文` -> `subject` 使用 **简体中文**。
         - `commit 英文` -> `subject` 使用 **英文**。
 
-3.  **输出结果**：
-    - 直接输出可以在终端执行的 `git commit` 命令代码块。
-    - **示例**：
-      ```bash
-      git commit -m "feat: 添加用户登录功能"
-      ```
-    - 在代码块下方提供简短的变更总结（可选）。
+3.  **输出结果并询问确认**：
+    - 输出生成的 `git commit` 命令代码块。
+    - 在代码块下方提供简短的变更总结。
+    - **必须询问用户**："是否需要执行此 commit？回复'好的'、'可以'、'yes'等即可执行。"
+    - 等待用户确认。
+
+4.  **执行确认**：
+    - 如果用户回复以下任一确认词，则**立即执行** `git commit` 命令：
+      - 中文确认词：好的、可以、可以的、行、没问题、执行、提交、确认
+      - 英文确认词：yes、y、ok、okay、sure、go、execute、commit
+    - 如果用户回复否定词（不、no、取消等），则不执行，并询问是否需要修改。
+    - 执行后，显示提交结果。
 
 ## 示例交互
 
@@ -51,9 +69,35 @@ alwaysApply: true
 git commit -m "fix: 修复登录页面无法跳转的问题"
 ```
 
+**变更总结**：修复了登录页面跳转逻辑中的问题。
+
+是否需要执行此 commit？回复'好的'、'可以'、'yes'等即可执行。
+
+**用户**: `好的`
+**AI**:
+正在执行 commit...
+```bash
+git commit -m "fix: 修复登录页面无法跳转的问题"
+```
+✓ Commit 已成功执行！
+
+---
+
 **用户**: `commit 英文`
 **AI**:
 Based on the changes, here is the suggested commit:
 ```bash
 git commit -m "fix: resolve issue where login page fails to redirect"
 ```
+
+**Summary**: Fixed the redirect issue in the login page.
+
+Would you like to execute this commit? Reply 'yes', 'ok', '好的' etc. to proceed.
+
+**用户**: `yes`
+**AI**:
+Executing commit...
+```bash
+git commit -m "fix: resolve issue where login page fails to redirect"
+```
+✓ Commit executed successfully!
