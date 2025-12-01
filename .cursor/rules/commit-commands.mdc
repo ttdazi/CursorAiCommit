@@ -1,0 +1,59 @@
+---
+description: 动态生成中英文 Git Commit 信息命令
+globs: 
+alwaysApply: true
+---
+
+# 动态 Commit 语言切换规则
+
+当用户在对话框中输入以下指令时，请严格按照本规则执行：
+
+## 触发指令
+- `commit 中文`：生成中文 commit 信息
+- `commit 英文`：生成英文 commit 信息
+
+## 执行步骤
+
+1.  **分析变更**：
+    - 获取当前暂存区（staged）的代码变更 (`git diff --cached`)。
+    - 如果没有暂存变更，请提示用户先执行 `git add` 或 `git stage` 来暂存文件。
+
+2.  **生成信息**：
+    - 根据用户的语言指令（中文/英文），基于变更内容生成符合 Conventional Commits 规范的 commit message。
+    - **格式**：`<type>(<scope>): <subject>`
+    - **类型 (Type)**：
+        - `feat`: 新功能
+        - `fix`: 修复 bug
+        - `docs`: 文档变更
+        - `style`: 代码格式（不影响功能，例如空格、分号等）
+        - `refactor`: 代码重构（既不是新增功能也不是修改 bug 的代码变动）
+        - `perf`: 性能优化
+        - `test`: 增加测试
+        - `chore`: 构建过程或辅助工具的变动
+    - **语言要求**：
+        - `commit 中文` -> `subject` 使用 **简体中文**。
+        - `commit 英文` -> `subject` 使用 **英文**。
+
+3.  **输出结果**：
+    - 直接输出可以在终端执行的 `git commit` 命令代码块。
+    - **示例**：
+      ```bash
+      git commit -m "feat: 添加用户登录功能"
+      ```
+    - 在代码块下方提供简短的变更总结（可选）。
+
+## 示例交互
+
+**用户**: `commit 中文`
+**AI**:
+根据当前的变更，建议如下提交：
+```bash
+git commit -m "fix: 修复登录页面无法跳转的问题"
+```
+
+**用户**: `commit 英文`
+**AI**:
+Based on the changes, here is the suggested commit:
+```bash
+git commit -m "fix: resolve issue where login page fails to redirect"
+```
