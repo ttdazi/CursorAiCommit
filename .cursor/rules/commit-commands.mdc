@@ -1,5 +1,5 @@
 ---
-description: 动态生成中英文 Git Commit 信息命令
+description: 动态生成中英文 Git Commit 信息命令（优化版）
 globs: 
 alwaysApply: true
 ---
@@ -47,57 +47,184 @@ alwaysApply: true
         - `commit 中文` -> `subject` 使用 **简体中文**。
         - `commit 英文` -> `subject` 使用 **英文**。
 
-3.  **输出结果并询问确认**：
-    - 输出生成的 `git commit` 命令代码块。
-    - 在代码块下方提供简短的变更总结。
-    - **必须询问用户**："是否需要执行此 commit？回复'好的'、'可以'、'yes'等即可执行。"
-    - 等待用户确认。
+3.  **输出结果并询问确认**（使用结构化格式）：
+
+    输出格式如下：
+
+    ---
+    
+    **📋 暂存区变更信息：**
+    
+    变更文件：
+    - <文件1> (状态)
+    - <文件2> (状态)
+    
+    变更摘要：新增 X 个 | 修改 Y 个 | 删除 Z 个
+    
+    ---
+    
+    **📝 生成的 Commit Message：**
+    
+    ```
+    <type>(<scope>): <subject>
+    ```
+    
+    ---
+    
+    **💻 提交命令（跨平台）：**
+    
+    **Windows PowerShell（避免乱码）:**
+    ```powershell
+    $msg = "<完整的 commit message>"; $bytes = [System.Text.Encoding]::UTF8.GetBytes($msg); [System.IO.File]::WriteAllBytes("$env:TEMP\commit-msg.txt", $bytes); git commit -F "$env:TEMP\commit-msg.txt"
+    ```
+    
+    **Mac/Linux/Git Bash:**
+    ```bash
+    git commit -m "<完整的 commit message>"
+    ```
+    
+    ---
+    
+    **❓ 确认提交：**
+    
+    是否需要执行此 commit？回复'好的'、'可以'、'yes'等即可执行。
+    
+    ---
 
 4.  **执行确认**：
     - 如果用户回复以下任一确认词，则**立即执行** `git commit` 命令：
       - 中文确认词：好的、可以、可以的、行、没问题、执行、提交、确认
       - 英文确认词：yes、y、ok、okay、sure、go、execute、commit
     - 如果用户回复否定词（不、no、取消等），则不执行，并询问是否需要修改。
-    - 执行后，显示提交结果。
+    
+    **执行时注意（跨平台编码处理）**：
+    - **Windows PowerShell**: 使用 UTF-8 无 BOM 文件方式提交，避免中文乱码
+      ```powershell
+      $msg = "<commit message>"; $bytes = [System.Text.Encoding]::UTF8.GetBytes($msg); [System.IO.File]::WriteAllBytes("$env:TEMP\commit-msg.txt", $bytes); git commit -F "$env:TEMP\commit-msg.txt"
+      ```
+    - **Mac/Linux/Git Bash**: 直接使用 `git commit -m`
+      ```bash
+      git commit -m "<commit message>"
+      ```
+    
+    执行后，显示提交结果。
+
+5.  **提交后验证（可选）**：
+    - 提交完成后，可执行 `git log -1 --oneline` 验证 commit message 是否正确显示
+    - 如果发现乱码，提示用户检查终端编码设置
 
 ## 示例交互
 
 **用户**: `commit 中文`
+
 **AI**:
-根据当前的变更，建议如下提交：
-```bash
-git commit -m "fix: 修复登录页面无法跳转的问题"
+
+---
+
+**📋 暂存区变更信息：**
+
+变更文件：
+- src/pages/Login.vue (修改)
+- src/utils/auth.ts (修改)
+
+变更摘要：新增 0 个 | 修改 2 个 | 删除 0 个
+
+---
+
+**📝 生成的 Commit Message：**
+
+```
+fix(auth): 修复登录页面无法跳转的问题
 ```
 
-**变更总结**：修复了登录页面跳转逻辑中的问题。
+---
+
+**💻 提交命令（跨平台）：**
+
+**Windows PowerShell（避免乱码）:**
+```powershell
+$msg = "fix(auth): 修复登录页面无法跳转的问题"; $bytes = [System.Text.Encoding]::UTF8.GetBytes($msg); [System.IO.File]::WriteAllBytes("$env:TEMP\commit-msg.txt", $bytes); git commit -F "$env:TEMP\commit-msg.txt"
+```
+
+**Mac/Linux/Git Bash:**
+```bash
+git commit -m "fix(auth): 修复登录页面无法跳转的问题"
+```
+
+---
+
+**❓ 确认提交：**
 
 是否需要执行此 commit？回复'好的'、'可以'、'yes'等即可执行。
 
+---
+
 **用户**: `好的`
+
 **AI**:
-正在执行 commit...
-```bash
-git commit -m "fix: 修复登录页面无法跳转的问题"
-```
+正在执行 commit（使用 UTF-8 编码）...
+
 ✓ Commit 已成功执行！
+
+验证结果：
+```
+abc1234 fix(auth): 修复登录页面无法跳转的问题
+```
 
 ---
 
 **用户**: `commit 英文`
+
 **AI**:
-Based on the changes, here is the suggested commit:
-```bash
-git commit -m "fix: resolve issue where login page fails to redirect"
+
+---
+
+**📋 Staged Changes:**
+
+Files:
+- src/pages/Login.vue (modified)
+- src/utils/auth.ts (modified)
+
+Summary: 0 added | 2 modified | 0 deleted
+
+---
+
+**📝 Generated Commit Message:**
+
+```
+fix(auth): resolve login page redirect issue
 ```
 
-**Summary**: Fixed the redirect issue in the login page.
+---
+
+**💻 Commit Commands (Cross-platform):**
+
+**Windows PowerShell:**
+```powershell
+$msg = "fix(auth): resolve login page redirect issue"; $bytes = [System.Text.Encoding]::UTF8.GetBytes($msg); [System.IO.File]::WriteAllBytes("$env:TEMP\commit-msg.txt", $bytes); git commit -F "$env:TEMP\commit-msg.txt"
+```
+
+**Mac/Linux/Git Bash:**
+```bash
+git commit -m "fix(auth): resolve login page redirect issue"
+```
+
+---
+
+**❓ Confirm Commit:**
 
 Would you like to execute this commit? Reply 'yes', 'ok', '好的' etc. to proceed.
 
+---
+
 **用户**: `yes`
+
 **AI**:
-Executing commit...
-```bash
-git commit -m "fix: resolve issue where login page fails to redirect"
-```
+Executing commit (UTF-8 encoding)...
+
 ✓ Commit executed successfully!
+
+Verification:
+```
+abc1234 fix(auth): resolve login page redirect issue
+```
