@@ -1,5 +1,5 @@
 ---
-description: 动态生成中英文 Git Commit 信息命令（优化版）
+description: 动态生成中英文 Git Commit 信息命令（基于实际代码变更）
 globs: 
 alwaysApply: true
 ---
@@ -12,53 +12,46 @@ alwaysApply: true
 - `commit 中文`：生成中文 commit 信息
 - `commit 英文`：生成英文 commit 信息
 
-**重要**：收到这些指令后，使用轻量级命令获取变更信息，避免执行可能卡住的 `git diff` 命令。
+**核心原则**：commit 信息必须基于**实际代码变更内容**生成，而不是仅根据文件名猜测。
 
 ## 执行步骤
 
-1.  **分析变更**（优先使用轻量级命令，避免卡住）：
-    - **第一步：检查暂存区**
-      - 执行 `git status --short` 获取暂存文件列表和状态。
-      - 如果有暂存文件（第一列有 A/M/D/R 等标记），直接进入生成 commit 信息步骤。
-    
-    - **第二步：自动暂存未跟踪/未暂存的变更**（如果没有暂存文件）
-      - 执行 `git status --short` 检查未暂存的变更（第二列有 M/D 标记）和未跟踪的文件（?? 标记）。
-      - 如果发现未暂存或未跟踪的文件，**自动执行 `git add`**：
-        - **重要**：使用**直接文件路径**而不是目录路径，避免卡住
-        - 使用 `git ls-files --others --exclude-standard` 获取未跟踪文件列表
-        - 对于每个文件，执行 `git add "<文件路径>"`（带引号，避免路径中的空格问题）
-        - **避免使用**：不要执行 `git add <目录>/` 或 `git add .`，这些命令可能因为 Windows 行尾转换或大量文件而卡住
-      - 暂存完成后，重新执行 `git status --short` 确认文件已暂存。
-    
-    - **第三步：获取变更详情**（如果需要更多信息）
-      - 执行 `git diff --cached --name-status` 获取文件状态（A=新增，M=修改，D=删除）
-      - **注意**：如果这些命令执行超过 3 秒无响应，立即放弃，基于文件名和路径推断变更类型。
-    
-    - **避免使用**：
-      - 不要执行 `git diff --cached`（完整 diff），因为它可能卡住，特别是当有大量变更或大文件时。
-      - 不要使用目录路径执行 `git add`，应直接指定文件路径。
-    
-    - 基于获取的信息进行分析和生成 commit 信息。
+1.  **检查暂存区**：
+    - 执行 `git status --short` 检查是否有暂存的文件。
+    - 如果没有暂存文件，提示用户先执行 `git add` 暂存文件。
 
-2.  **生成信息**：
-    - 根据用户的语言指令（中文/英文），基于变更内容生成符合 Conventional Commits 规范的 commit message。
-    - **格式**：`<type>(<scope>): <subject>`
-    - **类型 (Type)**：
-        - `feat`: 新功能
-        - `fix`: 修复 bug
-        - `docs`: 文档变更
-        - `style`: 代码格式（不影响功能，例如空格、分号等）
-        - `refactor`: 代码重构（既不是新增功能也不是修改 bug 的代码变动）
-        - `perf`: 性能优化
-        - `test`: 增加测试
-        - `chore`: 构建过程或辅助工具的变动
+2.  **获取实际代码变更内容**（关键步骤）：
+    - **必须执行** `git --no-pager diff --cached` 获取暂存区的**完整代码变更内容**。
+    - **重要**：使用 `--no-pager` 选项避免分页器阻塞，确保命令直接输出所有内容。
+    - 这是生成准确 commit 信息的基础，不能跳过。
+    - 仔细阅读代码变更，理解：
+      - 修改了什么功能？
+      - 添加了什么新代码？
+      - 删除了什么代码？
+      - 修复了什么问题？
+      - 重构了什么逻辑？
+
+3.  **分析代码变更**：
+    - 基于实际的代码变更内容，判断变更类型：
+      - 新增功能代码 → `feat`
+      - 修复 bug 的代码 → `fix`
+      - 文档/注释变更 → `docs`
+      - 代码格式调整 → `style`
+      - 代码重构 → `refactor`
+      - 性能优化 → `perf`
+      - 测试代码 → `test`
+      - 构建/配置文件 → `chore`
+    - 提取变更的核心内容，作为 commit 信息的描述。
+
+4.  **生成 commit message**：
+    - 格式：`<type>(<scope>): <subject>`
     - **语言要求**：
-        - `commit 中文` -> `subject` 使用 **简体中文**。
-        - `commit 英文` -> `subject` 使用 **英文**。
+      - `commit 中文` → subject 使用**简体中文**
+      - `commit 英文` → subject 使用**英文**
+    - **准确描述**：commit 信息必须准确反映代码变更的实际内容
+    - **简洁明了**：不超过 60 字符
 
-3.  **输出结果并询问确认**（使用结构化格式）：
-
-    输出格式如下：
+5.  **输出结果并询问确认**：
 
     ---
     
@@ -67,6 +60,9 @@ alwaysApply: true
     变更文件：
     - <文件1> (状态)
     - <文件2> (状态)
+    
+    **主要变更内容：**
+    <简要说明代码的主要变更，基于 git diff 的实际内容>
     
     变更摘要：新增 X 个 | 修改 Y 个 | 删除 Z 个
     
@@ -100,33 +96,39 @@ alwaysApply: true
     
     ---
 
-4.  **执行确认**：
+6.  **执行确认**：
     - 如果用户回复以下任一确认词，则**立即执行** `git commit` 命令：
       - 中文确认词：好的、可以、可以的、行、没问题、执行、提交、确认
       - 英文确认词：yes、y、ok、okay、sure、go、execute、commit
     - 如果用户回复否定词（不、no、取消等），则不执行，并询问是否需要修改。
     
-    **执行时注意（跨平台编码处理）**：
-    - **Windows PowerShell**: 使用 UTF-8 无 BOM 文件方式提交，避免中文乱码
+    **执行时使用跨平台编码处理**：
+    - **Windows PowerShell**: 使用 UTF-8 无 BOM 文件方式
       ```powershell
       $msg = "<commit message>"; $bytes = [System.Text.Encoding]::UTF8.GetBytes($msg); [System.IO.File]::WriteAllBytes("$env:TEMP\commit-msg.txt", $bytes); git commit -F "$env:TEMP\commit-msg.txt"
       ```
     - **Mac/Linux/Git Bash**: 直接使用 `git commit -m`
-      ```bash
-      git commit -m "<commit message>"
-      ```
-    
-    执行后，显示提交结果。
 
-5.  **提交后验证（可选）**：
-    - 提交完成后，可执行 `git log -1 --oneline` 验证 commit message 是否正确显示
+7.  **提交后验证**：
+    - 执行 `git log -1 --oneline` 验证 commit message 是否正确显示
     - 如果发现乱码，提示用户检查终端编码设置
+
+## 重要提示
+
+- **必须读取实际代码变更**：不能仅根据文件名猜测 commit 信息
+- **commit 信息要有意义**：准确描述代码的实际变更内容
+- **避免分页器阻塞**：所有 git diff 命令必须使用 `--no-pager` 选项
+  - ✅ 正确：`git --no-pager diff --cached`
+  - ❌ 错误：`git diff --cached`（会触发分页器，需要手动按键翻页）
+- **如果输出过长**：可以先用 `git --no-pager diff --cached --stat` 查看统计，或分批处理文件
 
 ## 示例交互
 
 **用户**: `commit 中文`
 
-**AI**:
+**AI**: 
+（执行 git status --short 检查暂存文件）
+（执行 git --no-pager diff --cached 获取完整代码变更）
 
 ---
 
@@ -136,6 +138,10 @@ alwaysApply: true
 - src/pages/Login.vue (修改)
 - src/utils/auth.ts (修改)
 
+**主要变更内容：**
+- 在 Login.vue 中修复了登录成功后 router.push 跳转失败的问题，原因是缺少 await
+- 在 auth.ts 中添加了 token 过期时间的检查逻辑
+
 变更摘要：新增 0 个 | 修改 2 个 | 删除 0 个
 
 ---
@@ -143,7 +149,7 @@ alwaysApply: true
 **📝 生成的 Commit Message：**
 
 ```
-fix(auth): 修复登录页面无法跳转的问题
+fix(auth): 修复登录成功后页面跳转失败的问题
 ```
 
 ---
@@ -152,12 +158,12 @@ fix(auth): 修复登录页面无法跳转的问题
 
 **Windows PowerShell（避免乱码）:**
 ```powershell
-$msg = "fix(auth): 修复登录页面无法跳转的问题"; $bytes = [System.Text.Encoding]::UTF8.GetBytes($msg); [System.IO.File]::WriteAllBytes("$env:TEMP\commit-msg.txt", $bytes); git commit -F "$env:TEMP\commit-msg.txt"
+$msg = "fix(auth): 修复登录成功后页面跳转失败的问题"; $bytes = [System.Text.Encoding]::UTF8.GetBytes($msg); [System.IO.File]::WriteAllBytes("$env:TEMP\commit-msg.txt", $bytes); git commit -F "$env:TEMP\commit-msg.txt"
 ```
 
 **Mac/Linux/Git Bash:**
 ```bash
-git commit -m "fix(auth): 修复登录页面无法跳转的问题"
+git commit -m "fix(auth): 修复登录成功后页面跳转失败的问题"
 ```
 
 ---
@@ -171,69 +177,11 @@ git commit -m "fix(auth): 修复登录页面无法跳转的问题"
 **用户**: `好的`
 
 **AI**:
-正在执行 commit（使用 UTF-8 编码）...
+正在执行 commit...
 
 ✓ Commit 已成功执行！
 
 验证结果：
 ```
-abc1234 fix(auth): 修复登录页面无法跳转的问题
-```
-
----
-
-**用户**: `commit 英文`
-
-**AI**:
-
----
-
-**📋 Staged Changes:**
-
-Files:
-- src/pages/Login.vue (modified)
-- src/utils/auth.ts (modified)
-
-Summary: 0 added | 2 modified | 0 deleted
-
----
-
-**📝 Generated Commit Message:**
-
-```
-fix(auth): resolve login page redirect issue
-```
-
----
-
-**💻 Commit Commands (Cross-platform):**
-
-**Windows PowerShell:**
-```powershell
-$msg = "fix(auth): resolve login page redirect issue"; $bytes = [System.Text.Encoding]::UTF8.GetBytes($msg); [System.IO.File]::WriteAllBytes("$env:TEMP\commit-msg.txt", $bytes); git commit -F "$env:TEMP\commit-msg.txt"
-```
-
-**Mac/Linux/Git Bash:**
-```bash
-git commit -m "fix(auth): resolve login page redirect issue"
-```
-
----
-
-**❓ Confirm Commit:**
-
-Would you like to execute this commit? Reply 'yes', 'ok', '好的' etc. to proceed.
-
----
-
-**用户**: `yes`
-
-**AI**:
-Executing commit (UTF-8 encoding)...
-
-✓ Commit executed successfully!
-
-Verification:
-```
-abc1234 fix(auth): resolve login page redirect issue
+abc1234 fix(auth): 修复登录成功后页面跳转失败的问题
 ```
