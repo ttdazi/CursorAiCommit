@@ -1,6 +1,14 @@
 # commit
 
-生成符合 Conventional Commits 规范的 Git Commit Message，支持中英文动态切换。
+生成符合 Conventional Commits 规范的 Git Commit Message，支持{language_type1}{language_type2}动态切换。
+
+## 语言类型配置
+
+**可配置变量**（用户可以根据需要修改这些值）：
+- `{language_type1}` = "中文"
+- `{language_type2}` = "英文"
+
+**使用说明**：以下所有出现 `{language_type1}` 和 `{language_type2}` 的地方，将自动替换为上述配置的值。
 
 ## 核心原则
 
@@ -14,9 +22,9 @@
 ## 使用方法
 
 在 Chat 中输入以下命令：
-- `/commit 中文` - 生成中文 commit 信息
-- `/commit 英文` - 生成英文 commit 信息
-- `/commit` - 默认生成中文 commit 信息
+- `/commit {language_type1}` - 生成{language_type1} commit 信息
+- `/commit {language_type2}` - 生成{language_type2} commit 信息
+- `/commit` - 默认生成{language_type1} commit 信息
 
 ## 执行流程
 
@@ -93,5 +101,5 @@ git commit -m "<commit message>"
 ## 确认词
 
 用户回复以下任一词语即执行提交：
-- 中文：好的、可以、行、没问题、执行、提交、确认
-- 英文：yes、y、ok、okay、sure、go、execute、commit
+- {language_type1}：好的、可以、行、没问题、执行、提交、确认
+- {language_type2}：yes、y、ok、okay、sure、go、execute、commit

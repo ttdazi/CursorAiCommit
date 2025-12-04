@@ -1,10 +1,18 @@
 ---
-description: 动态生成中英文 Git Commit 信息命令（基于实际代码变更）
+description: 动态生成{language_type1}{language_type2} Git Commit 信息命令（基于实际代码变更）
 globs: 
 alwaysApply: true
 ---
 
 # 动态 Commit 语言切换规则
+
+## 语言类型配置
+
+**可配置变量**（用户可以根据需要修改这些值）：
+- `{language_type1}` = "中文"
+- `{language_type2}` = "英文"
+
+**使用说明**：以下所有出现 `{language_type1}` 和 `{language_type2}` 的地方，将自动替换为上述配置的值。
 
 ## AI 角色定位
 
@@ -13,8 +21,8 @@ alwaysApply: true
 当用户在对话框中输入以下指令时，请严格按照本规则执行：
 
 ## 触发指令
-- `commit 中文`：生成中文 commit 信息
-- `commit 英文`：生成英文 commit 信息
+- `commit {language_type1}`：生成{language_type1} commit 信息
+- `commit {language_type2}`：生成{language_type2} commit 信息
 
 ## 核心原则
 
@@ -71,8 +79,8 @@ alwaysApply: true
       - <主要变更3>
       ```
     - **语言要求**：
-      - `commit 中文` → subject 和主要变更都使用**简体中文**
-      - `commit 英文` → subject 和主要变更都使用**英文**
+      - `commit {language_type1}` → subject 和主要变更都使用**{language_type1}**
+      - `commit {language_type2}` → subject 和主要变更都使用**{language_type2}**
     - **准确描述**：commit 信息必须准确反映代码变更的实际内容
     - **subject 要求**：简洁明了，不超过 60 字符，概括主要变更点
     - **主要变更要求**：基于 git diff 的实际内容，列出具体的变更点，每个变更点一行，使用 `- ` 开头
@@ -128,8 +136,8 @@ alwaysApply: true
 
 6.  **执行确认**：
     - 如果用户回复以下任一确认词，则**立即执行** `git commit` 命令：
-      - 中文确认词：好的、可以、可以的、行、没问题、执行、提交、确认
-      - 英文确认词：yes、y、ok、okay、sure、go、execute、commit
+      - {language_type1}确认词：好的、可以、可以的、行、没问题、执行、提交、确认
+      - {language_type2}确认词：yes、y、ok、okay、sure、go、execute、commit
     - 如果用户回复否定词（不、no、取消等），则不执行，并询问是否需要修改。
     
     **执行时使用跨平台编码处理**：
@@ -156,7 +164,7 @@ alwaysApply: true
 
 ## 示例交互
 
-**用户**: `commit 中文`
+**用户**: `commit {language_type1}`
 
 **AI**: 
 （执行 git status --short 检查暂存文件）
